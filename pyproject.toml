@@ -15,6 +15,12 @@ dependencies = [
     "typer>=0.12,<1",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8,<9",
+    "ruff>=0.6,<1",
+]
+
 [project.scripts]
 agent-eval = "agent_eval.cli:app"
 
@@ -29,4 +35,3 @@ addopts = "-q"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-

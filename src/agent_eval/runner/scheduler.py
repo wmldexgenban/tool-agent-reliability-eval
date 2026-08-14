@@ -15,7 +15,7 @@ async def with_retry(operation: Callable[[], Awaitable[object]], config: RetryCo
     for attempt in range(config.max_attempts):
         try:
             return await operation()
-        except (asyncio.TimeoutError, ProviderError) as exc:
+        except (TimeoutError, ProviderError) as exc:
             retryable = isinstance(exc, asyncio.TimeoutError) or exc.retryable
             if not retryable or attempt == config.max_attempts - 1:
                 raise

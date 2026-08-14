@@ -72,16 +72,16 @@ class OpenAICompatibleProvider(ModelProvider):
 def provider_from_config(model_config: object) -> ModelProvider:
     """Build a provider from a validated ModelConfig without embedding credentials."""
 
-    if getattr(model_config, "provider") == "mock":
-        return MockProvider(getattr(model_config, "model_name") or getattr(model_config, "name"))
-    api_key = os.getenv(getattr(model_config, "api_key_env"))
-    base_url = getattr(model_config, "base_url") or os.getenv("MODEL_BASE_URL")
-    model_name = getattr(model_config, "model_name") or os.getenv("MODEL_NAME")
+    if model_config.provider == "mock":
+        return MockProvider(model_config.model_name or model_config.name)
+    api_key = os.getenv(model_config.api_key_env)
+    base_url = model_config.base_url or os.getenv("MODEL_BASE_URL")
+    model_name = model_config.model_name or os.getenv("MODEL_NAME")
     if not api_key or not base_url or not model_name:
         raise ValueError("openai_compatible provider requires API key, base URL, and model name")
     return OpenAICompatibleProvider(
         model_name=model_name,
         base_url=base_url,
         api_key=api_key,
-        timeout_s=getattr(model_config, "timeout_s"),
+        timeout_s=model_config.timeout_s,
     )
