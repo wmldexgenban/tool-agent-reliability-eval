@@ -1,7 +1,11 @@
 from agent_eval.agents.baseline import CandidateAnswer
 from agent_eval.environments.inventory import InventoryEnvironment
 from agent_eval.evaluators.reliability import classify_reliability
-from agent_eval.policies.evidence_guard import EvidenceGuard, EvidenceRequirement, EvidenceRequirementRegistry
+from agent_eval.policies.evidence_guard import (
+    EvidenceGuard,
+    EvidenceRequirement,
+    EvidenceRequirementRegistry,
+)
 
 
 def test_guard_accepts_matching_visible_record() -> None:
