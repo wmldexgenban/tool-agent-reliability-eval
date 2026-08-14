@@ -22,3 +22,20 @@ def classify_reliability(
         "false_rejection": policy_name == "evidence_guard" and not policy_result.accepted and evidence_valid,
     }
 
+
+def attribute_failure(
+    candidate: CandidateAnswer,
+    observation: ToolObservation,
+    policy_result: PolicyResult,
+) -> str | None:
+    """Map a failed episode to a visible pipeline stage without exposing model reasoning."""
+
+    if policy_result.reason == "execution_error":
+        return "execution"
+    if candidate.value != observation.ground_truth:
+        return "candidate_selection"
+    if not evidence_is_valid(candidate, observation):
+        return "evidence_validation"
+    if not policy_result.accepted:
+        return "submission"
+    return None

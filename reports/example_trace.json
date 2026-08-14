@@ -1,0 +1,57 @@
+{
+  "episode_id": "portfolio-trace-example",
+  "task": "Which SKU currently has the highest available stock?",
+  "candidate": "SKU-A17",
+  "evidence_status": "unsupported",
+  "decision": "rejected",
+  "failure_stage": "candidate_selection",
+  "events": [
+    {
+      "event_type": "TASK_CREATED",
+      "data": {
+        "case_id": "inventory-001",
+        "task": "Which SKU currently has the highest available stock?"
+      }
+    },
+    {
+      "event_type": "CANDIDATE_SELECTED",
+      "data": {
+        "candidate": {
+          "value": "SKU-A17",
+          "answer_type": "inventory",
+          "evidence_refs": [
+            "inventory:summary"
+          ],
+          "confidence": 0.82
+        }
+      }
+    },
+    {
+      "event_type": "EVIDENCE_CHECKED",
+      "data": {
+        "accepted": false,
+        "reason": "insufficient_evidence",
+        "validated_refs": []
+      }
+    },
+    {
+      "event_type": "SUBMISSION_REJECTED",
+      "data": {
+        "reason": "insufficient_evidence"
+      }
+    },
+    {
+      "event_type": "EPISODE_EVALUATED",
+      "data": {
+        "evaluation": {
+          "task_correct": false,
+          "evidence_valid": false,
+          "unsupported_commit": false,
+          "guard_rejected": true,
+          "false_rejection": false,
+          "failure_stage": "candidate_selection"
+        }
+      }
+    }
+  ]
+}

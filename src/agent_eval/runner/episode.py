@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from agent_eval.agents.baseline import CandidateAnswer, ToolUsingAgent
 from agent_eval.environments.base import ToolObservation
 from agent_eval.evaluators.correctness import task_is_correct
-from agent_eval.evaluators.reliability import classify_reliability
+from agent_eval.evaluators.reliability import attribute_failure, classify_reliability
 from agent_eval.models.base import ProviderError, TokenUsage
 from agent_eval.policies.base import PolicyResult, SubmissionPolicy
 from agent_eval.tracing.events import AgentTrace
@@ -31,7 +31,8 @@ class EpisodeOutcome(BaseModel):
     candidate: CandidateAnswer | None = None
     policy_result: PolicyResult
     final_answer: str | None = None
-    evaluation: dict[str, bool] = Field(default_factory=dict)
+    evaluation: dict[str, Any] = Field(default_factory=dict)
+    failure_stage: str | None = None
     trace: AgentTrace
     error: str | None = None
 
@@ -44,7 +45,7 @@ async def run_episode(
     agent: ToolUsingAgent,
     policy: SubmissionPolicy,
 ) -> EpisodeOutcome:
-    started_at = datetime.now(timezone.utc)
+    started_at = datetime.now(UTC)
     timer = time.perf_counter()
     recorder = TraceRecorder(episode_id)
     recorder.record("TASK_CREATED", case_id=observation.case_id, task=observation.task)
@@ -69,6 +70,8 @@ async def run_episode(
             "task_correct": task_is_correct(candidate, observation, policy_result),
             **reliability,
         }
+        failure_stage = attribute_failure(candidate, observation, policy_result)
+        evaluation["failure_stage"] = failure_stage
         recorder.record("EPISODE_EVALUATED", evaluation=evaluation)
         usage = turn.response.usage
         return EpisodeOutcome(
@@ -78,20 +81,21 @@ async def run_episode(
             policy=policy.name,
             case_id=observation.case_id,
             started_at=started_at,
-            finished_at=datetime.now(timezone.utc),
+            finished_at=datetime.now(UTC),
             latency_ms=round((time.perf_counter() - timer) * 1000, 3),
             usage=usage,
             candidate=candidate,
             policy_result=policy_result,
             final_answer=candidate.value if policy_result.accepted else None,
             evaluation=evaluation,
+            failure_stage=failure_stage,
             trace=recorder.snapshot(),
         )
     except ProviderError as exc:
         if exc.retryable:
             raise
         return failed_episode(episode_id, model_name, observation, policy, recorder, timer, str(exc))
-    except Exception as exc:  # Preserve a failed trace so a later run can resume it.
+    except Exception as exc:  # noqa: BLE001 - episode boundary must persist unexpected failures.
         return failed_episode(episode_id, model_name, observation, policy, recorder, timer, str(exc))
 
 
@@ -118,8 +122,8 @@ def failed_episode(
         model=model_name,
         policy=policy.name,
         case_id=observation.case_id,
-        started_at=datetime.now(timezone.utc),
-        finished_at=datetime.now(timezone.utc),
+        started_at=datetime.now(UTC),
+        finished_at=datetime.now(UTC),
         latency_ms=round((time.perf_counter() - timer) * 1000, 3),
         policy_result=policy_result,
         evaluation={
@@ -128,7 +132,9 @@ def failed_episode(
             "unsupported_commit": False,
             "guard_rejected": False,
             "false_rejection": False,
+            "failure_stage": "execution",
         },
+        failure_stage="execution",
         trace=recorder.snapshot(),
         error=error,
     )
