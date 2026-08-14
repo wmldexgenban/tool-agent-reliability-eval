@@ -22,9 +22,8 @@
 
 ## Trace and storage
 
-`TraceRecorder` emits `TASK_CREATED`, `TOOL_RESPONSE_RECEIVED`, `CANDIDATE_SELECTED`, `EVIDENCE_CHECKED`, `SUBMISSION_ACCEPTED` or `SUBMISSION_REJECTED`, and `EPISODE_EVALUATED`. The complete trace travels with the episode result in JSONL. SQLite stores only completion state for lightweight resume checks.
+`TraceRecorder` emits `TASK_CREATED`, `TOOL_RESPONSE_RECEIVED`, `CANDIDATE_SELECTED`, `EVIDENCE_CHECKED`, `SUBMISSION_ACCEPTED` or `SUBMISSION_REJECTED`, and `EPISODE_EVALUATED`. `attribute_failure` adds a structured `failure_stage` such as `candidate_selection`, `evidence_validation`, or `submission`; it never stores hidden model reasoning. The complete trace travels with the episode result in JSONL. SQLite stores only completion state for lightweight resume checks. A compact public example is written to `reports/example_trace.json`.
 
 ## Evaluator
 
 Correctness checks accepted final values against ground truth. Reliability classification independently checks evidence validity, unsupported commits, guard rejections, and false rejections. `aggregate_outcomes` groups episodes by model and policy, while `render_report` produces the comparison Markdown.
-

@@ -7,6 +7,4 @@ dist/
 build/
 *.egg-info/
 results/
-reports/*.json
 reports/*.jsonl
-

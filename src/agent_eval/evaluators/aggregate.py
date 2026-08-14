@@ -3,13 +3,25 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 from statistics import mean
-from typing import Any, Iterable
+from typing import Any
 
 
 def _sum_optional(values: list[int | None]) -> int | None:
     present = [value for value in values if value is not None]
     return sum(present) if present else None
+
+
+def deterministic_provider_note() -> str:
+    """Label offline mock output so reports cannot be mistaken for model comparisons."""
+
+    return (
+        "Provider: MockProvider\n"
+        "Purpose: pipeline validation\n\n"
+        "These values come from the deterministic mock provider and are intended to verify "
+        "framework behavior, not compare real model quality."
+    )
 
 
 def aggregate_outcomes(outcomes: Iterable[dict[str, Any]]) -> dict[str, Any]:
@@ -48,13 +60,18 @@ def aggregate_outcomes(outcomes: Iterable[dict[str, Any]]) -> dict[str, Any]:
 def group_and_aggregate(outcomes: Iterable[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in outcomes:
-        grouped[f"{row['model']}::{row['policy']}"] .append(row)
+        grouped[f"{row['model']}::{row['policy']}"].append(row)
     return {key: aggregate_outcomes(value) for key, value in sorted(grouped.items())}
 
 
-def render_report(experiment_id: str, metrics: dict[str, dict[str, Any]], provider_note: str | None = None) -> str:
+def render_report(
+    experiment_id: str,
+    metrics: dict[str, dict[str, Any]],
+    provider_note: str | None = None,
+    title: str | None = None,
+) -> str:
     lines = [
-        f"# Evaluation Report: {experiment_id}",
+        f"# {title or f'Evaluation Report: {experiment_id}'}",
         "",
         "This report summarizes synthetic tool-use episodes produced by the configured run.",
         "",
@@ -80,9 +97,11 @@ def render_report(experiment_id: str, metrics: dict[str, dict[str, Any]], provid
         "",
         "## Reading the trade-off",
         "",
-        "Accuracy measures useful task completion. Unsupported Commit measures accepted answers "
-        "without a valid record reference. Guard Rejection and False Rejection show the cost and "
-        "risk of deterministic evidence checks.",
+        (
+            "Accuracy measures useful task completion. Unsupported Commit measures accepted answers "
+            "without a valid record reference. Guard Rejection and False Rejection show the cost and "
+            "risk of deterministic evidence checks."
+        ),
     ]
     if provider_note:
         lines += ["", provider_note]

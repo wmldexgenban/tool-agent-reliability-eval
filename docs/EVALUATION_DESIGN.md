@@ -20,3 +20,6 @@ The evaluator preserves the transition from task creation to tool response, cand
 
 The comparison should be read as a product trade-off: more reliable answers may cost extra latency or token usage, while an overly strict guard may create false rejections. The v1 report makes all of those dimensions explicit.
 
+## Functional validation boundary
+
+The built-in `MockProvider` is deterministic and offline. Its outputs are useful for validating failure injection, trace capture, policy application, evaluator logic, metric aggregation, and report generation. They are not evidence of relative model quality. Real-provider validation is an optional extension through the provider interface.

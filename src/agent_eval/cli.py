@@ -9,7 +9,7 @@ from pathlib import Path
 import typer
 
 from agent_eval.config import load_config
-from agent_eval.evaluators.aggregate import render_report
+from agent_eval.evaluators.aggregate import deterministic_provider_note, render_report
 from agent_eval.runner.experiment import ExperimentRunner
 
 app = typer.Typer(help="Run configurable reliability evaluations for tool-using agents.")
@@ -43,12 +43,14 @@ def report(
     if not metrics_path.exists():
         raise typer.BadParameter(f"metrics file not found: {metrics_path}")
     metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+    metadata_path = Path(output_dir) / f"{experiment_id}.meta.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8")) if metadata_path.exists() else {}
+    provider_note = deterministic_provider_note() if metadata.get("providers") == ["mock"] else None
     destination = Path(report_dir) / f"{experiment_id}.md"
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(render_report(experiment_id, metrics), encoding="utf-8")
+    destination.write_text(render_report(experiment_id, metrics, provider_note), encoding="utf-8")
     typer.echo(f"Report: {destination}")
 
 
 if __name__ == "__main__":
     app()
-

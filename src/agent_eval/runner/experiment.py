@@ -13,12 +13,16 @@ from agent_eval.config import ExperimentConfig
 from agent_eval.environments.base import ToolEnvironment
 from agent_eval.environments.inventory import InventoryEnvironment
 from agent_eval.environments.ticketing import TicketingEnvironment
-from agent_eval.evaluators.aggregate import group_and_aggregate, render_report
+from agent_eval.evaluators.aggregate import (
+    deterministic_provider_note,
+    group_and_aggregate,
+    render_report,
+)
 from agent_eval.models.base import ModelProvider
 from agent_eval.models.openai_compatible import provider_from_config
+from agent_eval.policies.base import SubmissionPolicy
 from agent_eval.policies.evidence_guard import EvidenceGuard
 from agent_eval.policies.self_check import BaselinePolicy, SelfCheckPolicy
-from agent_eval.policies.base import SubmissionPolicy
 from agent_eval.storage.jsonl import JsonlStore
 from agent_eval.storage.sqlite import SQLiteStateStore
 
@@ -67,8 +71,8 @@ class ExperimentRunner:
             for policy_name in self.config.policies:
                 policy = policy_from_name(policy_name)
                 for observation in observations:
-                    episode_id = "::".join(
-                        [self.config.experiment_id, model_config.name, policy_name, observation.case_id]
+                    episode_id = (
+                        f"{self.config.experiment_id}::{model_config.name}::{policy_name}::{observation.case_id}"
                     )
                     if episode_id not in completed:
                         jobs.append((episode_id, model_config.name, provider, policy, observation))
@@ -89,7 +93,7 @@ class ExperimentRunner:
 
             try:
                 outcome = await limiter.run(lambda: with_retry(call, self.config.retry))
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 - persist failed episodes for resume.
                 outcome = failed_episode(
                     episode_id,
                     model_name,
@@ -111,11 +115,25 @@ class ExperimentRunner:
         metrics = group_and_aggregate(row for row in rows if row.get("status") == "completed")
         metrics_path = self.output_dir / f"{self.config.experiment_id}.metrics.json"
         metrics_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+        metadata_path = self.output_dir / f"{self.config.experiment_id}.meta.json"
+        metadata_path.write_text(
+            json.dumps(
+                {
+                    "experiment_id": self.config.experiment_id,
+                    "environment": self.config.environment.name,
+                    "providers": [model.provider for model in self.config.models],
+                    "policies": self.config.policies,
+                    "cases": len(observations),
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
         report_path = Path(self.config.report_dir) / f"{self.config.experiment_id}.md"
         report_path.parent.mkdir(parents=True, exist_ok=True)
         provider_note = None
         if all(model.provider == "mock" for model in self.config.models):
-            provider_note = "Sample results generated with the built-in deterministic mock provider."
+            provider_note = deterministic_provider_note()
         report_path.write_text(render_report(self.config.experiment_id, metrics, provider_note), encoding="utf-8")
         return {
             "experiment_id": self.config.experiment_id,

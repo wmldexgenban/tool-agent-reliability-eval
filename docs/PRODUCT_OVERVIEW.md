@@ -21,7 +21,7 @@ Structured API responses often contain both detailed records and convenient summ
 
 ## Functional scope
 
-The v1 scope includes two synthetic enterprise API environments, a deterministic local provider, an OpenAI-compatible adapter, three submission policies, structured candidates, evidence requirements, JSONL traces, SQLite resume state, retries for transient provider failures, and grouped metric reports.
+The v1 scope includes two synthetic enterprise API environments, a deterministic offline provider, an optional OpenAI-compatible adapter, three submission policies, structured candidates, evidence requirements, JSONL traces, SQLite resume state, retries for transient provider failures, failure-stage attribution, and grouped metric reports. The default run is a pipeline validation fixture, not a hosted-model quality comparison.
 
 ## Metrics
 
@@ -30,4 +30,3 @@ The v1 scope includes two synthetic enterprise API environments, a deterministic
 ## Trade-offs
 
 A stricter policy can reduce unsupported answers while lowering usefulness if it rejects valid evidence. A prompt-only check may improve behavior at extra model latency and usage. The framework keeps these dimensions visible together so a product decision is not reduced to one score.
-
