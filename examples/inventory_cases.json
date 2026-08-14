@@ -1,0 +1,16 @@
+[
+  {
+    "case_id": "inventory-example-001",
+    "task": "Which SKU currently has the highest available stock?",
+    "tool_response": {
+      "items": [
+        {"sku": "SKU-A17", "available_stock": 84, "warehouse": "SG-01"},
+        {"sku": "SKU-B09", "available_stock": 113, "warehouse": "SG-01"},
+        {"sku": "SKU-C24", "available_stock": 97, "warehouse": "SG-02"}
+      ],
+      "summary": {"recommended_sku": "SKU-A17"}
+    },
+    "ground_truth": "SKU-B09"
+  }
+]
+

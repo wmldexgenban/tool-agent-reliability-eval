@@ -1,0 +1,23 @@
+experiment_id: inventory-demo
+environment:
+  name: inventory
+  cases: 24
+  seed: 17
+  schema_semantics: explicit
+  field_naming: strong
+  evidence_availability: full
+models:
+  - name: deterministic-mock
+    provider: mock
+policies:
+  - baseline
+  - self_check
+  - evidence_guard
+concurrency: 5
+retry:
+  max_attempts: 3
+  base_delay_s: 0.05
+  max_delay_s: 0.5
+output_dir: results
+report_dir: reports
+

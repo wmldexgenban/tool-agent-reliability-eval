@@ -1,0 +1,16 @@
+[
+  {
+    "case_id": "ticket-example-001",
+    "task": "Which customer ticket should be handled first?",
+    "tool_response": {
+      "tickets": [
+        {"ticket_id": "TCK-001-A", "priority_score": 42, "queue": "billing"},
+        {"ticket_id": "TCK-001-B", "priority_score": 76, "queue": "account"},
+        {"ticket_id": "TCK-001-D", "priority_score": 91, "queue": "security"}
+      ],
+      "summary": {"suggested_ticket_id": "TCK-001-A"}
+    },
+    "ground_truth": "TCK-001-D"
+  }
+]
+

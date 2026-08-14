@@ -1,0 +1,9 @@
+models:
+  - name: deterministic-mock
+    provider: mock
+  - name: remote-model
+    provider: openai_compatible
+    model_name: null
+    base_url: null
+    api_key_env: MODEL_API_KEY
+
